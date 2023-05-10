@@ -1,8 +1,8 @@
 name: CI-CD-to-AWS
 env:
   S3_BUCKET_NAME      : "andrii-bunetskul-application"
-  APPLICATION_NAME    : ""
-  ENVIRONMENT_NAME    : ""
+  APPLICATION_NAME    : "Application"
+  ENVIRONMENT_NAME    : "Application-env"
   DEPLOY_PACKAGE_NAME : "flask_app_${{ github.sha }}.zip"
   AWS_REGION_NAME     : "eu-north-1"
 
@@ -34,5 +34,30 @@ jobs:
     
     - name: Print CI finish
       run : echo "CI part finished successfully"
+
+  cd_part:
+    runs-on: ubuntu-20.04
+    needs: [ci_part]
+    
+    steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id     : ${{ secrets.MY_AWS_ACCESS_KEY }}
+        aws-secret-access-key : ${{ secrets.MY_AWS_SECRET_KEY }}
+        aws-region            : ${{ env.AWS_REGION_NAME }}
+    
+    - name: Create new ElastickBeanstalk Application
+      run : |
+        aws elasticbeanstalk create-application-version \
+        --application-name ${{ env.APPLICATION_NAME }} \
+        --source-bundle S3Bucket="${{ env.S3_BUCKET_NAME }}",S3Key="${{ env.DEPLOY_PACKAGE_NAME }}"\
+        --version-label "Ver-${{ github.sha }}"
+        
+    - name: Deploy new ElastickBeanstalk Application
+      run : aws elasticbeanstalk update-environment --environment-name ${{ env.ENVIRONMENT_NAME }} --version-label "Ver-${{ github.sha }}"
       
-      
+    - name: Print CD finish
+      run : echo "CD part finished successfully"
+        
+        
