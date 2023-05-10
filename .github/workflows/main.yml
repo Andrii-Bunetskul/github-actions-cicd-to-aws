@@ -6,7 +6,10 @@ env:
   DEPLOY_PACKAGE_NAME : "flask_app_${{ github.sha }}.zip"
   AWS_REGION_NAME     : ""
 
-on: [push]
+on: 
+  push:
+    branches:
+      - main
 
 jobs:
   ci_part:
