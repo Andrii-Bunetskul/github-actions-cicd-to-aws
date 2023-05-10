@@ -1,10 +1,10 @@
 name: CI-CD-to-AWS
 env:
-  S3_BUCKET_NAME      : ""
+  S3_BUCKET_NAME      : "andrii-bunetskul-application"
   APPLICATION_NAME    : ""
   ENVIRONMENT_NAME    : ""
   DEPLOY_PACKAGE_NAME : "flask_app_${{ github.sha }}.zip"
-  AWS_REGION_NAME     : ""
+  AWS_REGION_NAME     : "eu-north-1"
 
 on: 
   push:
@@ -18,6 +18,21 @@ jobs:
     steps:
     - name: Git clone repo
       uses: actions/checkout@v1
+    
     - name: Create zip package
-      run: zip -r ${{ env.DEPLOY_PACKAGE_NAME }} ./ -x *.git*
+      run : zip -r ${{ env.DEPLOY_PACKAGE_NAME }} ./ -x *.git*
+    
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id     : ${{ secrets.MY_AWS_ACCESS_KEY }}
+        aws-secret-access-key : ${{ secrets.MY_AWS_SECRET_KEY }}
+        aws-region            : ${{ env.AWS_REGION_NAME }}
+    
+    - name: Copy package to S3 bucket
+      run : aws s3 cp ${{ env.DEPLOY_PACKAGE_NAME }} s3://${{ S3_BUCKET_NAME }}/
+    
+    - name: Print CI finish
+      run : echo "CI part finished successfully"
+      
       
